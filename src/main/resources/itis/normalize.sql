@@ -203,14 +203,14 @@ UPDATE taxa LEFT JOIN reviews ON taxa.credibility_rtng = reviews.review SET taxa
 ALTER TABLE taxa DROP COLUMN credibility_rtng;
 
 # taxa
-UPDATE taxa SET unit_name_3 = unit_name_4 WHERE unit_name_4 is NOT NULL;
-UPDATE taxa SET unit_name_2 = unit_name_3 WHERE unit_name_3 is NOT NULL;
-UPDATE taxa SET unit_name_1 = unit_name_2 WHERE unit_name_2 is NOT NULL;
+UPDATE taxa SET unit_name3 = unit_name4 WHERE unit_name4 is NOT NULL;
+UPDATE taxa SET unit_name2 = unit_name3 WHERE unit_name3 is NOT NULL;
+UPDATE taxa SET unit_name1 = unit_name2 WHERE unit_name2 is NOT NULL;
 ALTER TABLE taxa DROP COLUMN author_hybrid;
 ALTER TABLE taxa DROP COLUMN initial_time_stamp ;
-ALTER TABLE taxa DROP COLUMN unit_name_2 ;
-ALTER TABLE taxa DROP COLUMN unit_name_3 ;
-ALTER TABLE taxa DROP COLUMN unit_name_4 ;
+ALTER TABLE taxa DROP COLUMN unit_name2 ;
+ALTER TABLE taxa DROP COLUMN unit_name3 ;
+ALTER TABLE taxa DROP COLUMN unit_name4 ;
 ALTER TABLE taxa DROP COLUMN phylo_sort_seq ;
 ALTER TABLE taxa DROP COLUMN unit_ind1;
 ALTER TABLE taxa DROP COLUMN unit_ind2;
@@ -243,7 +243,7 @@ UPDATE taxa SET currency = NULL WHERE currency = '';
 UPDATE taxa SET currency = NULL WHERE currency = 'unknown';
 UPDATE taxa SET name_usage = 'invalid' WHERE name_usage = 'not accepted';
 UPDATE taxa SET name_usage = 'valid' WHERE name_usage = 'accepted';
-UPDATE taxa SET taxonomic_rank = taxonomic_ra	nk div 5;
+UPDATE taxa SET taxonomic_rank = taxonomic_rank div 5;
 UPDATE taxa SET unaccept_reason = NULL WHERE name = '';
 UPDATE taxa SET valid = 'N' WHERE valid = 'invalid';
 UPDATE taxa SET valid = 'Y' WHERE valid = 'valid';
