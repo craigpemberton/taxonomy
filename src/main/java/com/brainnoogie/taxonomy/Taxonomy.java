@@ -54,9 +54,9 @@ public class Taxonomy extends JPrefuseApplet {
 		return getComponent(graph, label);
 	}
 
-	public static JComponent getComponent(Graph g, String label){
+	public static JComponent getComponent(Graph graph, String label){
 		final Visualization visualization = new Visualization();
-		VisualGraph visualGraph = visualization.addGraph("graph", g);
+		VisualGraph visualGraph = visualization.addGraph("graph", graph);
 		visualization.setValue("graph.edges", null, VisualItem.INTERACTIVE, Boolean.FALSE);
 		TupleSet focusGroup = visualization.getGroup(Visualization.FOCUS_ITEMS);
 		focusGroup.addTupleSetListener(new TupleSetListener(){
