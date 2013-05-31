@@ -1,7 +1,7 @@
-# # do main import
+# do main import
 DROP DATABASE IF EXISTS ITIS;
 CREATE DATABASE IF NOT EXISTS ITIS CHARACTER SET latin1 collate = latin1_bin;
- USE ITIS;
+USE ITIS;
 SOURCE ITIS.sql
 
 # drop unneeded tables
@@ -68,14 +68,15 @@ ALTER TABLE geographic_region_to_taxon CHANGE COLUMN geographic_value geographic
 ALTER TABLE geographic_region_to_taxon CHANGE COLUMN tsn taxon int(11) NOT NULL;
 ALTER TABLE geographic_region_to_taxon ADD FOREIGN KEY (taxon) REFERENCES taxa (id);
 DROP INDEX geographic_index ON geographic_region_to_taxon;
+ALTER TABLE geographic_region_to_taxon DROP PRIMARY KEY;
 UPDATE geographic_region_to_taxon SET geographic_region_name = 'Europe & Northern Asia (excluding China)' WHERE geographic_region_name LIKE 'Europe and%';
 
 # geographic_regions
 CREATE TABLE geographic_regions ( id tinyint auto_increment NOT NULL, name varchar(45) NOT NULL, PRIMARY KEY (id));
-INSERT INTO geographic_regions (name) SELECT DISTINCT geographic_region_name FROM geographic_regions_to_taxon ORDER BY geographic_region_name;
+INSERT INTO geographic_regions (name) SELECT DISTINCT geographic_region_name FROM geographic_region_to_taxon ORDER BY geographic_region_name;
 ALTER TABLE geographic_region_to_taxon ADD COLUMN geographic_region tinyint NOT NULL;
 UPDATE geographic_region_to_taxon JOIN geographic_regions ON geographic_region_to_taxon.geographic_region_name = geographic_regions.name SET geographic_region_to_taxon.geographic_region = geographic_regions.id;
-ALTER TABLE geographic_regions DROP COLUMN geographic_region_name;
+ALTER TABLE geographic_region_to_taxon DROP COLUMN geographic_region_name;
 
 # taxon to area
 ALTER TABLE jurisdiction RENAME TO taxon_to_area;
@@ -104,7 +105,6 @@ UPDATE sources SET type = 'website' WHERE type = '2011';
 UPDATE sources SET type = 'PDF' WHERE type = 'pdf file';
 UPDATE sources SET type = 'CD-ROM' WHERE type = 'CD ROM';
 UPDATE sources SET type = 'CD-ROM' WHERE type = 'disk file';
-CREATE UNIQUE INDEX i ON sources (id);
 
 # publications
 ALTER TABLE publications DROP COLUMN pub_id_prefix;
@@ -167,21 +167,20 @@ ALTER TABLE vernacular_to_taxon CHANGE COLUMN documentation_id reference int(11)
 ALTER TABLE vernacular_to_taxon DROP PRIMARY KEY;
 ALTER TABLE vernacular_to_taxon ADD FOREIGN KEY (taxon) REFERENCES taxa (id);
 ALTER TABLE vernacular_to_taxon ADD FOREIGN KEY (vernacular) REFERENCES vernaculars (id);
-ALTER TABLE vernacular_to_taxon ADD FOREIGN KEY (reference) REFERENCES references_ (id);
+ALTER TABLE vernacular_to_taxon ADD FOREIGN KEY (reference) REFERENCES reference_links (id);
 
-
-# references
-ALTER TABLE reference_links RENAME TO references_;
-ALTER TABLE references_ DROP COLUMN change_track_id;
-ALTER TABLE references_ DROP COLUMN init_itis_desc_ind;
-ALTER TABLE references_ DROP COLUMN original_desc_ind ;
-ALTER TABLE references_ DROP COLUMN update_date;
-ALTER TABLE references_ DROP COLUMN vernacular_name;
-ALTER TABLE references_ CHANGE COLUMN doc_id_prefix reference_type char(3) NOT NULL;
-ALTER TABLE references_ CHANGE COLUMN documentation_id reference int(11) NOT NULL;
-ALTER TABLE references_ CHANGE COLUMN reference_type type char(3) NOT NULL;
-ALTER TABLE references_ CHANGE COLUMN tsn taxon int(11) NOT NULL;
-DROP INDEX reference_links_index ON references_;
+# citations
+ALTER TABLE reference_links RENAME TO citations;
+ALTER TABLE citations DROP COLUMN change_track_id;
+ALTER TABLE citations DROP COLUMN init_itis_desc_ind;
+ALTER TABLE citations DROP COLUMN original_desc_ind ;
+ALTER TABLE citations DROP COLUMN update_date;
+ALTER TABLE citations DROP COLUMN vernacular_name;
+ALTER TABLE citations CHANGE COLUMN doc_id_prefix reference_type char(3) NOT NULL;
+ALTER TABLE citations CHANGE COLUMN documentation_id reference int(11) NOT NULL;
+ALTER TABLE citations CHANGE COLUMN reference_type type char(3) NOT NULL;
+ALTER TABLE citations CHANGE COLUMN tsn taxon int(11) NOT NULL;
+DROP INDEX reference_links_index ON citations;
 
 # comment to taxon
 ALTER TABLE tu_comments_links RENAME TO comment_to_taxon;
@@ -193,20 +192,16 @@ DROP INDEX tu_comments_links_index ON comment_to_taxon;
 ALTER TABLE comment_to_taxon ADD FOREIGN KEY (taxon) REFERENCES taxa (id);
 ALTER TABLE comment_to_taxon ADD FOREIGN KEY (comment) REFERENCES comments (id);
 
-# taxonomic units 
-ALTER TABLE taxonomic_units RENAME to taxa;
-ALTER TABLE taxon_unit_types RENAME TO taxonomic_units;
-ALTER TABLE taxonomic_units DROP COLUMN update_date;
-ALTER TABLE taxonomic_units CHANGE COLUMN rank_id id smallint(6) NOT NULL;
-ALTER TABLE taxonomic_units CHANGE COLUMN kingdom_id kingdom tinyint NOT NULL;
-ALTER TABLE taxonomic_units CHANGE COLUMN rank_name name char(15) NOT NULL;
-ALTER TABLE taxonomic_units CHANGE COLUMN dir_parent_rank_id parent_direct smallint(6) NOT NULL;
-ALTER TABLE taxonomic_units CHANGE COLUMN req_parent_rank_id parent_required smallint(6) NOT NULL;
-ALTER TABLE taxonomic_units ADD FOREIGN KEY (parent_direct) REFERENCES taxonomic_units (id);
-ALTER TABLE taxonomic_units ADD FOREIGN KEY (parent_required) REFERENCES taxonomic_units (id);
-#UPDATE taxonomic_units SET id = id div 5; # Duplicate entry '3-50' for key 'PRIMARY'
-#UPDATE taxonomic_units SET parent_direct = parent_direct div 5;
-#UPDATE taxonomic_units SET parent_required = parent_required div 5;
+# taxonomic ranks 
+ALTER TABLE taxon_unit_types RENAME TO taxonomic_ranks;
+ALTER TABLE taxonomic_ranks DROP COLUMN update_date;
+ALTER TABLE taxonomic_ranks CHANGE COLUMN rank_id id smallint(6) NOT NULL;
+ALTER TABLE taxonomic_ranks CHANGE COLUMN kingdom_id kingdom tinyint NOT NULL;
+ALTER TABLE taxonomic_ranks CHANGE COLUMN rank_name name char(15) NOT NULL;
+ALTER TABLE taxonomic_ranks CHANGE COLUMN dir_parent_rank_id parent_direct smallint(6) NOT NULL;
+ALTER TABLE taxonomic_ranks CHANGE COLUMN req_parent_rank_id parent_required smallint(6) NOT NULL;
+ALTER TABLE taxonomic_ranks ADD FOREIGN KEY (parent_direct) REFERENCES taxonomic_ranks (id);
+ALTER TABLE taxonomic_ranks ADD FOREIGN KEY (parent_required) REFERENCES taxonomic_ranks (id);
 
 # invalidity reasons
 CREATE TABLE invalidity_reasons ( id tinyint auto_increment NOT NULL, invalidity_reason varchar(50) NOT NULL, PRIMARY KEY (id));
@@ -223,6 +218,7 @@ UPDATE taxa LEFT JOIN reviews ON taxa.credibility_rtng = reviews.review SET taxa
 ALTER TABLE taxa DROP COLUMN credibility_rtng;
 
 # taxa
+ALTER TABLE taxonomic_units RENAME to taxa;
 UPDATE taxa SET unit_name3 = unit_name4 WHERE unit_name4 is NOT NULL;
 UPDATE taxa SET unit_name2 = unit_name3 WHERE unit_name3 is NOT NULL;
 UPDATE taxa SET unit_name1 = unit_name2 WHERE unit_name2 is NOT NULL;
@@ -252,7 +248,6 @@ ALTER TABLE taxa CHANGE COLUMN unnamed_taxon_ind unnamed char(1) NOT NULL;
 CREATE UNIQUE INDEX taxaindex ON taxa (id);
 UPDATE taxa SET currency = NULL WHERE currency = '';
 UPDATE taxa SET currency = NULL WHERE currency = 'unknown';
-UPDATE taxa SET taxonomic_rank = taxonomic_rank div 5;
 UPDATE taxa SET invalidity_reason = NULL WHERE name = '';
 UPDATE taxa SET valid = 'N' WHERE valid = 'invalid';
 UPDATE taxa SET valid = 'Y' WHERE valid = 'valid';
@@ -267,3 +262,8 @@ ALTER TABLE taxa ADD COLUMN nodc char(12);
 UPDATE taxa INNER JOIN nodc SET taxa.nodc=nodc.id WHERE nodc.taxon = taxa.id;
 DROP TABLE nodc;
 
+# divide taxonomic_ranks by 5...
+# UPDATE taxonomic_ranks SET id = id div 5; # Duplicate entry '3-50' for key 'PRIMARY'
+# UPDATE taxonomic_ranks SET parent_direct = parent_direct div 5;
+# UPDATE taxonomic_ranks SET parent_required = parent_required div 5;
+# UPDATE taxa SET taxonomic_rank = taxonomic_rank div 5;
