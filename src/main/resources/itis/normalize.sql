@@ -13,6 +13,20 @@ DROP TABLE hierarchy;
 DROP TABLE longnames;
 DROP TABLE reviews;
 
+# do the ranames up front to reducing ordering constraints
+ALTER TABLE geographic_div RENAME TO geographic_region_to_taxon;
+ALTER TABLE jurisdiction RENAME TO taxon_to_area;
+ALTER TABLE nodc_ids RENAME TO nodc;
+ALTER TABLE other_sources RENAME TO sources;
+ALTER TABLE reference_links RENAME TO citations;
+ALTER TABLE strippedauthor RENAME TO authors_stripped;
+ALTER TABLE synonym_links RENAME TO synonyms;
+ALTER TABLE taxon_authors_lkp RENAME TO authors;
+ALTER TABLE taxonomic_units RENAME TO taxa;
+ALTER TABLE taxon_unit_types RENAME TO taxonomic_ranks;
+ALTER TABLE tu_comments_links RENAME TO comment_to_taxon;
+ALTER TABLE vern_ref_links RENAME TO vernacular_to_taxon;
+
 # comments
 ALTER TABLE comments DROP COLUMN update_date;
 ALTER TABLE comments CHANGE COLUMN commentator expert varchar(100) NOT NULL;
@@ -62,7 +76,6 @@ ALTER TABLE experts DROP PRIMARY KEY;
 ALTER TABLE experts ADD PRIMARY KEY (id);
 
 # geographic_region_to_taxon
-ALTER TABLE geographic_div RENAME TO geographic_region_to_taxon;
 ALTER TABLE geographic_region_to_taxon DROP COLUMN update_date;
 ALTER TABLE geographic_region_to_taxon CHANGE COLUMN geographic_value geographic_region_name varchar(45) NOT NULL;
 ALTER TABLE geographic_region_to_taxon CHANGE COLUMN tsn taxon int(11) NOT NULL;
@@ -79,7 +92,6 @@ UPDATE geographic_region_to_taxon JOIN geographic_regions ON geographic_region_t
 ALTER TABLE geographic_region_to_taxon DROP COLUMN geographic_region_name;
 
 # taxon to area
-ALTER TABLE jurisdiction RENAME TO taxon_to_area;
 ALTER TABLE taxon_to_area DROP COLUMN update_date;
 ALTER TABLE taxon_to_area CHANGE COLUMN jurisdiction_value area varchar(30) NOT NULL;
 ALTER TABLE taxon_to_area CHANGE COLUMN tsn taxon int(11) NOT NULL;
@@ -94,7 +106,6 @@ ALTER TABLE kingdoms CHANGE COLUMN kingdom_name kingdom char(10) NOT NULL;
 DROP INDEX kingdoms_index ON kingdoms;
 
 # sources
-ALTER TABLE other_sources RENAME TO sources;
 ALTER TABLE sources DROP COLUMN source_id_prefix;
 ALTER TABLE sources DROP COLUMN acquisition_date;
 ALTER TABLE sources DROP COLUMN update_date;
@@ -122,18 +133,15 @@ ALTER TABLE publications DROP PRIMARY KEY;
 ALTER TABLE publications ADD PRIMARY KEY (id);
 
 # synonyms
-ALTER TABLE synonym_links RENAME TO synonyms;
 ALTER TABLE synonyms DROP COLUMN update_date ;
 ALTER TABLE synonyms CHANGE COLUMN tsn_accepted taxon_accepted int(11);
 ALTER TABLE synonyms CHANGE COLUMN tsn taxon int(11);
 
 # authors stripped
-ALTER TABLE strippedauthor RENAME TO authors_stripped;
 ALTER TABLE authors_stripped CHANGE COLUMN taxon_author_id id int(11) NOT NULL;
 ALTER TABLE authors_stripped CHANGE COLUMN shortauthor author varchar(100) NOT NULL;
 
 # authors
-ALTER TABLE taxon_authors_lkp RENAME TO authors;
 ALTER TABLE authors DROP COLUMN update_date;
 ALTER TABLE authors CHANGE COLUMN taxon_author_id id int(11) NOT NULL;
 ALTER TABLE authors CHANGE COLUMN kingdom_id kingdom tinyint NOT NULL;
@@ -158,7 +166,6 @@ ALTER TABLE vernaculars ADD FOREIGN KEY (taxon) REFERENCES taxa (id);
 UPDATE vernaculars SET language = 'English' WHERE language = 'unspecified';
 
 # vernacular to taxon
-ALTER TABLE vern_ref_links RENAME TO vernacular_to_taxon;
 ALTER TABLE vernacular_to_taxon DROP COLUMN update_date;
 ALTER TABLE vernacular_to_taxon CHANGE COLUMN tsn taxon int(11) NOT NULL;
 ALTER TABLE vernacular_to_taxon CHANGE COLUMN vern_id vernacular int(11) NOT NULL;
@@ -170,7 +177,6 @@ ALTER TABLE vernacular_to_taxon ADD FOREIGN KEY (vernacular) REFERENCES vernacul
 ALTER TABLE vernacular_to_taxon ADD FOREIGN KEY (reference) REFERENCES reference_links (id);
 
 # citations
-ALTER TABLE reference_links RENAME TO citations;
 ALTER TABLE citations DROP COLUMN change_track_id;
 ALTER TABLE citations DROP COLUMN init_itis_desc_ind;
 ALTER TABLE citations DROP COLUMN original_desc_ind ;
@@ -183,7 +189,6 @@ ALTER TABLE citations CHANGE COLUMN tsn taxon int(11) NOT NULL;
 DROP INDEX reference_links_index ON citations;
 
 # comment to taxon
-ALTER TABLE tu_comments_links RENAME TO comment_to_taxon;
 ALTER TABLE comment_to_taxon DROP COLUMN update_date;
 ALTER TABLE comment_to_taxon CHANGE COLUMN tsn taxon int(11) NOT NULL;
 ALTER TABLE comment_to_taxon CHANGE COLUMN comment_id comment int(11) NOT NULL;
@@ -193,7 +198,6 @@ ALTER TABLE comment_to_taxon ADD FOREIGN KEY (taxon) REFERENCES taxa (id);
 ALTER TABLE comment_to_taxon ADD FOREIGN KEY (comment) REFERENCES comments (id);
 
 # taxonomic ranks 
-ALTER TABLE taxon_unit_types RENAME TO taxonomic_ranks;
 ALTER TABLE taxonomic_ranks DROP COLUMN update_date;
 ALTER TABLE taxonomic_ranks CHANGE COLUMN rank_id id smallint(6) NOT NULL;
 ALTER TABLE taxonomic_ranks CHANGE COLUMN kingdom_id kingdom tinyint NOT NULL;
@@ -218,7 +222,6 @@ UPDATE taxa LEFT JOIN reviews ON taxa.credibility_rtng = reviews.review SET taxa
 ALTER TABLE taxa DROP COLUMN credibility_rtng;
 
 # taxa
-ALTER TABLE taxonomic_units RENAME to taxa;
 UPDATE taxa SET unit_name3 = unit_name4 WHERE unit_name4 is NOT NULL;
 UPDATE taxa SET unit_name2 = unit_name3 WHERE unit_name3 is NOT NULL;
 UPDATE taxa SET unit_name1 = unit_name2 WHERE unit_name2 is NOT NULL;
@@ -255,7 +258,6 @@ UPDATE taxa SET valid = 'N' WHERE valid = 'not accepted';
 UPDATE taxa SET valid = 'Y' WHERE valid = 'accepted';
 
 # nodc
-ALTER TABLE nodc_ids RENAME TO nodc;
 ALTER TABLE nodc CHANGE COLUMN tsn taxon int(11);
 ALTER TABLE nodc CHANGE COLUMN nodc_id id char(12);
 ALTER TABLE taxa ADD COLUMN nodc char(12);
